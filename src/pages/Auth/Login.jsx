@@ -1,6 +1,7 @@
 import registerBg from "../../assets/Register-image.png";
 import { Link, useNavigate } from "react-router";
-//import { useDispatch } from "react-redux";
+import { Provider } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setUser } from '../../redux/authSlice';
 import { loginUser } from "../../services/authServices";
 import { useState } from "react";
@@ -12,7 +13,7 @@ const Login = () => {
         password: ''
     });
 
-    //const dispatch = useDispatch();
+    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
