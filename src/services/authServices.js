@@ -1,22 +1,42 @@
-import instances from "../instances/instances"
-import protectedInstance from '../instances/protectedInstance';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-export const registerUser = async (userData) => {
-    const response = await instances.post('/auth/register', userData);
-    return response.data;
+async function request(path, options = {}) {
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      ...options,
+    });
+  } catch {
+    throw new Error(
+      "Couldn't reach the backend. Connect your Netlify function to make this live."
+    );
+  }
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    // no JSON body
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || `Request failed (${response.status})`);
+  }
+
+  return data;
 }
 
-export const loginUser = async (credentials) => {
-    const response = await protectedInstance.post('/auth/login', credentials);
-    return response.data;
-};
+// Expected shape from POST /auth/login and POST /auth/register:
+// { name, email, role }
+export const loginUser = (credentials) =>
+  request("/auth/login", { method: "POST", body: JSON.stringify(credentials) });
 
-export const getMe = async () => {
-    const response = await protectedInstance.get('/auth/me');
-    return response.data;
-};
+export const registerUser = (data) =>
+  request("/auth/register", { method: "POST", body: JSON.stringify(data) });
 
-export const logoutUser = async () => {
-    const response = await protectedInstance.post('/auth/logout');
-    return response.data;
-};
+export const logoutUser = () => request("/auth/logout", { method: "POST" });
+
+// Used to restore session on page refresh — expected shape same as login.
+export const getCurrentUser = () => request("/auth/me");

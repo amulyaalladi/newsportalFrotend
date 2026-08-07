@@ -4,7 +4,7 @@
 // no other file needs to change. Override the base URL via .env if needed:
 //   VITE_API_BASE_URL=https://your-site.netlify.app/.netlify/functions
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/.netlify/functions";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ;
 
 async function request(path, options = {}) {
   let response;
@@ -39,7 +39,7 @@ async function request(path, options = {}) {
 // ---- Profile -------------------------------------------------------------
 
 // Expected shape from GET /profile:
-// { name: string, email: string, bio: string, avatarUrl: string }
+// { name: string, email: string, bio: string, avatarUrl: string, role: "user" | "editor" | "admin" }
 export const getProfile = () => request("/profile");
 
 export const updateProfile = (profile) =>
