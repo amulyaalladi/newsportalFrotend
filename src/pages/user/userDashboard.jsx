@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import NavBar from "../../components/common/NavBar";
-import { getPreferences, updatePreferences, getNotifications, markAllNotificationsRead,markNotificationRead} from "../../services/userServices";
+import Navbar from "../../components/common/NavBar";
+import { getProfile, getPreferences, updatePreferences } from "../../services/userServices";
 import { fetchTopHeadlines } from "../../services/newsServices";
 import { CATEGORY_OPTIONS } from "../../components/common/categories";
 
@@ -59,6 +59,13 @@ const UserDashboard = () => {
       }
     } catch (err) {
       console.error("Error loading user dashboard:", err);
+
+      if (err.status === 401) {
+        toast.error("Please log in to view your dashboard.");
+        navigate("/login", { replace: true });
+        return;
+      }
+
       setError(err.message || "Failed to load your dashboard.");
     } finally {
       setLoading(false);
