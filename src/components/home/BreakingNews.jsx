@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
-import { fetchTopHeadlines } from "../../services/newsServices"
+import { getBreakingNews } from "../../services/newsServices"
 
 const BreakingNews = () => {
   const [news, setNews] = useState([]);
@@ -12,8 +12,7 @@ const BreakingNews = () => {
 
     const loadBreakingNews = async () => {
       try {
-        const articles = await fetchTopHeadlines({
-          pageSize: 4,
+        const articles = await getBreakingNews({
           signal: controller.signal,
         });
         setNews(articles);

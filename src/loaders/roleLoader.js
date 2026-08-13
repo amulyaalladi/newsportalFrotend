@@ -1,6 +1,6 @@
 import { redirect } from "react-router";
 import { clearUser,setUser } from "../redux/authSlice";
-import store from "../redux/store";
+import { store } from "../redux/store";
 import { getMe } from "../services/authServices";
 
 export const userLoader=async()=>{
@@ -60,7 +60,7 @@ export const editorLoader=async()=>{
         if(user.role !=='editor'){
             if(user.role==='user'){
                 return redirect('/dashboard');
-            }else if(user.role==='editor'){
+            }else if(user.role==='admin'){
                 return redirect('/admin/dashboard');
             }
             return redirect('/login');

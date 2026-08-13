@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { Mail, Bell } from "lucide-react";
 import { getPreferences, updatePreferences } from "../../services/userServices";
 import { CATEGORY_OPTIONS } from "../../components/common/categories";
 import NavBar from "../common/NavBar";
+
+const NOTIFICATION_CHANNELS = [
+  { key: "email", label: "Email", icon: Mail },
+  { key: "push", label: "Push Notifications", icon: Bell },
+];
 
 const NOTIFICATION_FREQUENCIES = [
   { key: "immediate", label: "Immediate" },
   { key: "hourly", label: "Hourly" },
   { key: "daily", label: "Daily" },
-  { key: "off", label: "Off" },
 ];
 
 const EMPTY_PREFERENCES = {
-  emailNewsletter: false,
+  darkMode: false,
   preferredCategories: [],
+  notificationChannel: "email",
   notificationFrequency: "immediate",
 };
 
@@ -43,6 +49,10 @@ const Preferences = () => {
 
   const toggleBoolean = (field) => {
     setPreferences((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const setNotificationChannel = (key) => {
+    setPreferences((prev) => ({ ...prev, notificationChannel: key }));
   };
 
   const setNotificationFrequency = (key) => {
@@ -76,120 +86,128 @@ const Preferences = () => {
 
   return (
     <>
-    <NavBar/>
-    <div className="min-h-screen px-4 py-12 bg-slate-900 text-slate-50 profile-shell">
-      <div className="mx-auto max-w-3xl">
-        <div className="profile-card p-6 sm:p-8">
-          <div className="flex flex-col gap-3 border-b border-slate-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold">Preferences</h1>
-              <p className="mt-1 text-sm text-slate-400">
-                Control how DailyPulse works for you.
-              </p>
-            </div>
-            <div className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-300">
-              Personalized experience
-            </div>
+        <NavBar/>
+        <div className="min-h-screen bg-gray-50 px-4 py-12">
+      <div className="mx-auto max-w-2xl">
+        <h1 className="text-3xl font-bold text-gray-800">Preferences</h1>
+        <p className="mt-2 text-gray-600">Control how DailyPulse works for you.</p>
+
+        {error && (
+          <div className="mt-6 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="mt-6 rounded-2xl border border-red-600/40 bg-red-500/10 p-4 text-sm text-red-300">
-              {error}
-            </div>
-          )}
+        {isLoading ? (
+          <div className="mt-6 rounded-lg bg-white p-8 text-center text-gray-500 shadow">
+            Loading preferences...
+          </div>
+        ) : (
+          <div className="mt-6 space-y-8">
+            
 
-          {isLoading ? (
-            <div className="mt-6 rounded-2xl border border-slate-800/80 bg-slate-950/60 p-8 text-center text-slate-400">
-              Loading preferences...
-            </div>
-          ) : (
-            <div className="mt-6 space-y-6">
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4">
-                <label className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-900/70 px-4 py-3 text-sm text-slate-200">
-                  <span>Email newsletter</span>
-                  <input
-                    type="checkbox"
-                    checked={preferences.emailNewsletter}
-                    onChange={() => toggleBoolean("emailNewsletter")}
-                    className="h-5 w-5 accent-cyan-500"
-                  />
-                </label>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4">
-                <h2 className="text-sm font-semibold text-slate-300">Preferred categories</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Pick the topics you want to see more often.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {CATEGORY_OPTIONS.map((option) => {
-                    const isSelected = preferences.preferredCategories.includes(option.key);
-                    return (
-                      <button
-                        key={option.key}
-                        type="button"
-                        onClick={() => toggleCategory(option.key)}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                          isSelected
-                            ? "bg-cyan-500 text-slate-950"
-                            : "bg-slate-800 text-slate-200 hover:bg-slate-700"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4">
-                <h2 className="text-sm font-semibold text-slate-300">Notification frequency</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Choose how often you want to be notified about new articles.
-                </p>
-                <div
-                  role="radiogroup"
-                  aria-label="Notification frequency"
-                  className="mt-3 flex flex-wrap gap-2"
-                >
-                  {NOTIFICATION_FREQUENCIES.map((option) => {
-                    const isSelected = preferences.notificationFrequency === option.key;
-                    return (
-                      <button
-                        key={option.key}
-                        type="button"
-                        role="radio"
-                        aria-checked={isSelected}
-                        onClick={() => setNotificationFrequency(option.key)}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                          isSelected
-                            ? "bg-cyan-500 text-slate-950"
-                            : "bg-slate-800 text-slate-200 hover:bg-slate-700"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-6">
-                <p className="text-sm text-slate-500">
-                  Preferences update instantly once you save them.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="rounded-xl bg-cyan-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving ? "Saving..." : "Save preferences"}
-                </button>
+            <div className="rounded-lg bg-white p-5 shadow">
+              <h2 className="text-sm font-semibold text-gray-700">Preferred categories</h2>
+              <p className="mt-1 text-xs text-gray-500">
+                Used to personalize your subscribed news feed.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {CATEGORY_OPTIONS.map((option) => {
+                  const isSelected = preferences.preferredCategories.includes(option.key);
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => toggleCategory(option.key)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        isSelected
+                          ? "bg-cyan-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="rounded-lg bg-white p-5 shadow">
+              <h2 className="text-sm font-semibold text-gray-700">Notification channel</h2>
+              <p className="mt-1 text-xs text-gray-500">
+                How you want to be notified about your subscribed news.
+              </p>
+              <div
+                role="radiogroup"
+                aria-label="Notification channel"
+                className="mt-3 flex flex-wrap gap-2"
+              >
+                {NOTIFICATION_CHANNELS.map(({ key, label, icon: Icon }) => {
+                  const isSelected = preferences.notificationChannel === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setNotificationChannel(key)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+                        isSelected
+                          ? "bg-cyan-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-white p-5 shadow">
+              <h2 className="text-sm font-semibold text-gray-700">Notification frequency</h2>
+              <p className="mt-1 text-xs text-gray-500">
+                How often you want to be notified about new articles in your subscribed categories.
+              </p>
+              <div
+                role="radiogroup"
+                aria-label="Notification frequency"
+                className="mt-3 flex flex-wrap gap-2"
+              >
+                {NOTIFICATION_FREQUENCIES.map((option) => {
+                  const isSelected = preferences.notificationFrequency === option.key;
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setNotificationFrequency(option.key)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        isSelected
+                          ? "bg-cyan-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="rounded-lg bg-cyan-600 px-6 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? "Saving..." : "Save preferences"}
+            </button>
+
+          </div>
+        )}
       </div>
     </div>
     </>

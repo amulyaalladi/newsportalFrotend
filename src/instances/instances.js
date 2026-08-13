@@ -2,7 +2,7 @@ import axios from "axios";
 
 const baseURL = 'https://newsportalbackend-oatr.onrender.com/api/v1';
 
-const instance = axios.create({
+const Instance = axios.create({
     baseURL: baseURL,
     timeout: 10000,
     headers: {
@@ -10,4 +10,4 @@ const instance = axios.create({
     }
 });
 
-export default instance;
+export default Instance;

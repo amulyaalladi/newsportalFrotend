@@ -32,9 +32,9 @@ const UserDashboard = () => {
       if (profile.role && profile.role !== "user") {
         toast.error("Access denied. Users only.");
         if (profile.role === "admin") {
-          navigate("/admin-dashboard", { replace: true });
+          navigate("/admin/dashboard", { replace: true });
         } else if (profile.role === "editor") {
-          navigate("/editor-dashboard", { replace: true });
+          navigate("/editor/dashboard", { replace: true });
         } else {
           navigate("/login", { replace: true });
         }
@@ -151,19 +151,19 @@ const UserDashboard = () => {
           <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
           <div className="flex flex-wrap gap-4">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/home")}
               className="rounded-lg bg-cyan-600 px-6 py-3 text-white transition duration-200 hover:bg-cyan-700"
             >
               Browse News
             </button>
             <button
-              onClick={() => navigate("/preferences")}
+              onClick={() => navigate("/profile")}
               className="rounded-lg bg-green-600 px-6 py-3 text-white transition duration-200 hover:bg-green-700"
             >
               Manage Preferences
             </button>
             <button
-              onClick={() => navigate("/notifications")}
+              onClick={() => navigate("/profile")}
               className="rounded-lg bg-purple-600 px-6 py-3 text-white transition duration-200 hover:bg-purple-700"
             >
               View Notifications
@@ -211,7 +211,7 @@ const UserDashboard = () => {
                 Pick a few categories to see personalized news here
               </p>
               <button
-                onClick={() => navigate("/preferences")}
+                onClick={() => navigate("/profile")}
                 className="rounded-lg bg-cyan-600 px-6 py-3 text-white hover:bg-cyan-700"
               >
                 Manage Preferences

@@ -36,6 +36,8 @@ export const loginUser = (credentials) =>
 export const registerUser = (data) =>
   request("/auth/register", { method: "POST", body: JSON.stringify(data) });
 
+
+export const getMe = () => request("/auth/me");
 export const logoutUser = () => request("/auth/logout", { method: "POST" });
 
 // Used to restore session on page refresh — expected shape same as login.

@@ -39,10 +39,10 @@ async function request(path, options = {}) {
 
 // Expected shape from GET /profile:
 // { name: string, email: string, bio: string, avatarUrl: string, role: "user" | "editor" | "admin" }
-export const getProfile = () => request("/auth/me");
+export const getProfile = () => request("/users/me");
 
 export const updateProfile = (profile) =>
-  request("/profile", {
+  request("/users/me", {
     method: "PUT",
     body: JSON.stringify(profile),
   });
@@ -51,15 +51,15 @@ export const updateProfile = (profile) =>
 
 // Expected shape from GET /preferences:
 // {
-//   emailNewsletter: boolean,
 //   darkMode: boolean,
 //   preferredCategories: string[],
-//   notificationFrequency: "immediate" | "hourly" | "daily" | "off"
+//   notificationChannel: "email" | "push",
+//   notificationFrequency: "immediate" | "hourly" | "daily"
 // }
 export const getPreferences = () => request("/preferences");
 
 export const updatePreferences = (preferences) =>
-  request("/preferences", {
+  request("/preferences/", {
     method: "PUT",
     body: JSON.stringify(preferences),
   });
@@ -68,13 +68,9 @@ export const updatePreferences = (preferences) =>
 
 // Expected shape from GET /notifications:
 // [{ id: string, title: string, message: string, createdAt: string, read: boolean }]
-export const getNotifications = () => request("/notifications");
+export const getNotifications = () => request("/notifications/");
 
-export const markNotificationRead = (id) =>
-  request(`/notifications/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ read: true }),
-  });
+
 
 export const markAllNotificationsRead = () =>
   request("/notifications/read-all", { method: "PATCH" });

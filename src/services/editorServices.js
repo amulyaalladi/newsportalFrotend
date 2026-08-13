@@ -1,4 +1,4 @@
-import protectedInstance from "../instances/protectedInstance";
+import protectedInstance from "../instances/ProtectedInstance";
 
 export const myNews=async()=>{
     const response=await protectedInstance.get('/editors/my-news')

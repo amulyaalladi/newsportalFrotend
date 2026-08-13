@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { clearUser } from "../../redux/authSlice";
 import { logoutUser } from "../../services/authServices";
+import UserDashboard from "../../pages/user/userDashboard";
 
 const NavBar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,30 +70,21 @@ const NavBar = () => {
 
                 <div className="invisible absolute right-0 z-20 mt-2 w-48 rounded-md border border-slate-700 bg-slate-900 opacity-0 shadow-lg transition-opacity duration-200 group-hover:visible group-hover:opacity-100">
                   <div className="py-1">
-                    <Link
-                      to={dashboardPath}
-                      className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                    >
-                      Dashboard
-                    </Link>
+                   
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
                     >
                       Profile
                     </Link>
-                    <Link
-                      to="/preferences"
-                      className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    <Link 
+                    to="/userDashboard"
+                    className="block px-4 py-2 text-sm text-slaate-200 hover:bg-slate-800"
                     >
-                      Preferences
-                    </Link>
-                    <Link
-                      to="/notifications"
-                      className="block px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
-                    >
-                      Notifications
-                    </Link>
+                      Dashboard
+                      </Link>
+
+                    
                     <button
                       type="button"
                       onClick={handleLogout}

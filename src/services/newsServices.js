@@ -1,127 +1,124 @@
-// Centralized NewsAPI client.
-// All news-fetching components should go through here instead of
-// calling `fetch()` directly, so the API key and base URL live in one place.
+// Centralized client for the app's own news endpoints.
+//
+// Previously this called NewsAPI.org directly from the browser. That has
+// two problems: NewsAPI's free tier only allows requests from localhost
+// (it'll 426/CORS-fail on any real deployment), and it exposes the API key
+// client-side. This version calls our own backend (newsController.js /
+// newsRouter.js) instead, which serves articles from our own MongoDB.
+//
+// NOTE: assumes newsRouter is mounted at `/news` in server.js
+// (e.g. `app.use('/news', newsRouter)`), and that `instance`'s baseURL
+// already includes the `/api/v1` prefix (see instances.js). Adjust the
+// paths below if newsRouter is mounted somewhere else.
+//
+// These routes are all public (no auth required per newsRouter.js), so we
+// use the plain `instance` client, not `protectedInstance`.
 
-const BASE_URL = "https://newsapi.org/v2";
-const API_KEY = import.meta.env.VITE_NEWS_API_KEY;
+import instance from "../instances/Instances";
+import protectedInstance from "../instances/ProtectedInstance";
 
-if (!API_KEY) {
-  // Fails loudly in dev instead of silently returning empty results.
-  console.warn(
-    "[newsService] VITE_NEWS_API_KEY is not set. Add it to a .env file — see .env.example."
-  );
-}
+const extractErrorMessage = (error, fallback) =>
+  error.response?.data?.message || fallback;
 
 /**
- * Fetch top headlines.
+ * Fetch a single category's articles from the backend.
  * @param {Object} options
- * @param {string} [options.country="us"]
- * @param {string} [options.category] - e.g. "business", "technology"
+ * @param {string} options.category - e.g. "business", "technology"
  * @param {number} [options.pageSize=20]
- * @param {AbortSignal} [options.signal] - pass an AbortController signal to allow cancellation
- * @returns {Promise<Array>} articles array (empty array on failure)
+ * @param {number} [options.page=1]
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<Array>} articles array
  */
-export async function fetchTopHeadlines({
-  country = "us",
-  category,
-  pageSize = 20,
-  signal,
-} = {}) {
-  const params = new URLSearchParams({
-    country,
-    pageSize: String(pageSize),
-    apiKey: API_KEY ?? "",
-  });
-
-  if (category) params.set("category", category);
-
-  const url = `${BASE_URL}/top-headlines?${params.toString()}`;
-
-  const response = await fetch(url, { signal });
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.message || "Unable to fetch news articles.");
+export async function fetchTopHeadlines({ category, pageSize = 20, page = 1, signal } = {}) {
+  try {
+    const response = await instance.get(`/news/category/${encodeURIComponent(category)}`, {
+      params: { pageSize, page },
+      signal,
+    });
+    return response.data.articles || [];
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Unable to fetch news articles."));
   }
-
-  return data.articles || [];
 }
 
 /**
- * Search articles by keyword (not currently used by Hero.jsx since it now
- * only uses fixed categories, but kept here in case you add
- * company/topic-based search back in later).
+ * Keyword search against the backend's News collection.
  * @param {Object} options
  * @param {string} options.q - search term
  * @param {number} [options.pageSize=9]
  * @param {AbortSignal} [options.signal]
+ * @returns {Promise<Array>} articles array
  */
 export async function fetchEverything({ q, pageSize = 9, signal } = {}) {
-  const params = new URLSearchParams({
-    q,
-    pageSize: String(pageSize),
-    sortBy: "publishedAt",
-    language: "en",
-    apiKey: API_KEY ?? "",
-  });
-
-  const url = `${BASE_URL}/everything?${params.toString()}`;
-
-  const response = await fetch(url, { signal });
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.message || "Unable to search articles.");
+  try {
+    const response = await instance.get("/news/search", {
+      params: { q, pageSize },
+      signal,
+    });
+    return response.data.articles || [];
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Unable to search articles."));
   }
-
-  return data.articles || [];
 }
 
 /**
- * Search top headlines with keyword + category + country + pagination.
- * Used by the Home page's search bar and filters. Returns totalResults too,
- * since NewsAPI's top-headlines endpoint supports pagination but only
- * returns article arrays per page — you need the total to build page numbers.
- * Note: NewsAPI's free tier caps results at 100 articles total regardless
- * of pageSize/page combination.
+ * Search + paginate news. Used by the Home page's search bar and filters.
  * @param {Object} options
  * @param {string} [options.q] - keyword search
  * @param {string} [options.category]
- * @param {string} [options.country="us"]
  * @param {number} [options.page=1]
  * @param {number} [options.pageSize=12]
  * @param {AbortSignal} [options.signal]
  * @returns {Promise<{articles: Array, totalResults: number}>}
  */
-export async function searchNews({
-  q,
-  category,
-  country = "us",
-  page = 1,
-  pageSize = 12,
-  signal,
-} = {}) {
-  const params = new URLSearchParams({
-    country,
-    page: String(page),
-    pageSize: String(pageSize),
-    apiKey: API_KEY ?? "",
-  });
 
-  if (category) params.set("category", category);
-  if (q) params.set("q", q);
+export const searchNews = async (params = {}) => {
+  // Converts params { q, category, page, pageSize } to query string
+  const response = await instance.get("/news/search", { params });
+  return response.data; // Returns { articles, totalResults }
+};
 
-  const url = `${BASE_URL}/top-headlines?${params.toString()}`;
+/**
+ * Latest breaking news, for the BreakingNews ticker on the Home page.
+ * @returns {Promise<Array>} articles array
+ */
 
-  const response = await fetch(url, { signal });
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.message || "Unable to fetch news articles.");
+export async function getBreakingNews({ signal } = {}) {
+  try {
+    const response = await instance.get("/news/breaking", { signal });
+    return response.data.result || [];
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Unable to fetch breaking news."));
   }
+}
 
-  return {
-    articles: data.articles || [],
-    totalResults: data.totalResults || 0,
-  };
+/**
+ * Trending news.
+ * @returns {Promise<Array>} articles array
+ */
+export async function getTrendingNews({ signal } = {}) {
+  try {
+    const response = await instance.get("/news/trending", { signal });
+    return response.data.result || [];
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Unable to fetch trending news."));
+  }
+}
+
+/**
+ * Trigger the backend to pull fresh articles from NewsAPI and store them.
+ * Admin/editor only — uses protectedInstance since it requires the auth
+ * cookie. Wire this to a button in AdminDashboard/EditorDashboard.
+ * @param {Object} [options]
+ * @param {string} [options.category] - omit to ingest every category
+ */
+export async function triggerNewsIngestion({ category } = {}) {
+  try {
+    const response = await protectedInstance.post("/news/fetch-external", null, {
+      params: category ? { category } : undefined,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, "Unable to fetch external news."));
+  }
 }

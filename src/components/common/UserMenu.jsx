@@ -3,9 +3,9 @@ import { Link } from "react-router";
 import { CircleUserRound, User, Settings, Bell } from "lucide-react";
 
 const MENU_ITEMS = [
+  {key:"dashboard", label:"Dashboard", to:"/user-dashboard"},
   { key: "profile", label: "Profile", to: "/profile", icon: User },
-  { key: "preferences", label: "Preferences", to: "/preferences", icon: Settings },
-  { key: "notifications", label: "Notifications", to: "/notifications", icon: Bell },
+
 ];
 
 const UserMenu = () => {

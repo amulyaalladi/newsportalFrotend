@@ -1,17 +1,16 @@
-import { redirect } from 'react-router';
-import { clearUser, setUser } from '../redux/authSlice';
-import store from '../redux/store';
+// src/loaders/authLoader.js
+import { getCurrentUser } from "../services/authServices";
+import { redirect } from "react-router";
 
-
-const authLoader = async () => {
+export default async function authLoader() {
   try {
-        const response = await getMe();
-        store.dispatch(setUser(response.user));
-        return response;
-    } catch (error) {
-    console.error('Auth loader error:', error);
-        store.dispatch(clearUser());
-        return redirect('/login');
+    const user = await getCurrentUser(); //[cite: 5]
+    if (!user) {
+      return redirect("/login");
     }
+    return user;
+  } catch (error) {
+    // If backend returns 401/404, redirect to login instead of crashing the page
+    return redirect("/login");
+  }
 }
-export default authLoader;

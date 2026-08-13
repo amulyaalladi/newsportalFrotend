@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Navbar from "../../components/common/NavBar";
 import Footer from "../../components/common/Footer";
@@ -7,7 +9,10 @@ import BreakingNews from "../../components/home/BreakingNews";
 import { searchNews } from "../../services/newsServices";
 import { CATEGORY_OPTIONS } from "../../components/common/categories";
 
+
 const PAGE_SIZE_OPTIONS = [12, 24, 36];
+
+  
 
 const Home = () => {
   const [news, setNews] = useState([]);
@@ -19,6 +24,15 @@ const Home = () => {
   const [pageSize, setPageSize] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const user = useSelector((state) => state.auth?.user);
+  const navigate = useNavigate();
+  useEffect(() => {
+    // If Redux has no user, send them back to login
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     fetchNews();
@@ -79,19 +93,7 @@ const Home = () => {
     <div className="min-h-screen bg-slate-950 text-slate-50">
       <Navbar />
 
-      <div className="flex items-center justify-end gap-3 bg-slate-900 px-4 py-2 text-sm">
-        <Link to="/login" className="text-slate-200 transition hover:text-cyan-400">
-          Login
-        </Link>
-        <span className="text-slate-600">|</span>
-        <Link to="/register" className="text-slate-200 transition hover:text-cyan-400">
-          Register
-        </Link>
-        <span className="text-slate-600">|</span>
-        <Link to="/editor-register" className="text-slate-200 transition hover:text-cyan-400">
-          Editor Login
-        </Link>
-      </div>
+      
 
       <BreakingNews />
 

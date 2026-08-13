@@ -1,30 +1,38 @@
-import { createBrowserRouter } from "react-router";
-import Home from "../pages/Home/Home";
-import Dashboard from "../components/home/Dashboard";
-import NewsDetails from "../pages/News/NewsDetails";
-import Register from "../pages/Auth/Register";
+// src/router/router.jsx
+import { createBrowserRouter, redirect } from "react-router";
+
 import Login from "../pages/Auth/Login";
+import Register from "../pages/Auth/Register";
 import ForgotPassword from "../pages/Auth/ForgotPassword";
-import EditorRegister from "../pages/Editor/EditorRegister";
-import EditorDashboard from "../pages/Editor/EditorDashboard";
-import AdminDashboard from "../pages/Admin/AdminDashboard";
-import Profile from "../components/profile/Profile";
-import Preferences from "../components/profile/Preferences";
-import Notifications from "../components/profile/Notifications";
+
+import Home from "../pages/Home/Home";
 import UserDashboard from "../pages/user/userDashboard";
+import Profile from "../components/profile/Profile";
+
+import guestLoader from "../loaders/guestLoader";
+import authLoader from "../loaders/authLoader";
 
 export const router = createBrowserRouter([
-  { path: "/", element: <Home /> },
-  //{ path: "/dashboard/:category", element: <Dashboard /> },
-  { path: "/news/:id", element: <NewsDetails /> },
-  { path: "/register", element: <Register /> },
-  { path: "/login", element: <Login /> },
-  {path:"/dashboard", element:<UserDashboard/>},
-  { path: "/forgot-password", element: <ForgotPassword /> },
-  { path: "/editor-register", element: <EditorRegister /> },
-  { path: "/editor-dashboard", element: <EditorDashboard /> },
-  { path: "/admin-dashboard", element: <AdminDashboard /> },
-  { path: "/profile", element: <Profile /> },
-  { path: "/preferences", element: <Preferences /> },
-  { path: "/notifications", element: <Notifications /> },
+  {
+    path: "/",
+    loader: () => redirect("/login"),
+  },
+
+  // Public / Guest Routes
+  { path: "/login", element: <Login />, loader: guestLoader },
+  { path: "/register", element: <Register />, loader: guestLoader },
+  { path: "/forgot-password", element: <ForgotPassword />, loader: guestLoader },
+
+  // Protected / Authenticated Routes
+  { path: "/home", element: <Home />, loader: authLoader },
+  { path: "/dashboard", element: <UserDashboard />, loader: authLoader },
+  { path: "/profile", element: <Profile />, loader: authLoader },
+
+  // Catch-all redirect
+  {
+    path: "*",
+    loader: () => redirect("/login"),
+  },
 ]);
+
+export default router;
