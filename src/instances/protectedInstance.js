@@ -4,7 +4,7 @@ const baseURL = 'https://newsportalbackend-oatr.onrender.com/api/v1';
 
 const ProtectedInstance = axios.create({
     baseURL: baseURL,
-    timeout: 10000,
+    timeout: 30000,
     headers: {
         "Content-Type": "application/json"
     },

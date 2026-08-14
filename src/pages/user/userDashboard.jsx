@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import Navbar from "../../components/common/NavBar";
 import { getProfile, getPreferences, updatePreferences } from "../../services/userServices";
-import { fetchTopHeadlines } from "../../services/newsServices";
+import ProtectedInstance from "../../instances/ProtectedInstance";
 import { CATEGORY_OPTIONS } from "../../components/common/categories";
 
 const UserDashboard = () => {
@@ -25,52 +25,69 @@ const UserDashboard = () => {
     setError("");
 
     try {
+      // 1. Get user profile
       const profile = await getProfile();
       setUser(profile);
 
-      // Role-based redirect, same idea as the job-board version.
-      if (profile.role && profile.role !== "user") {
-        toast.error("Access denied. Users only.");
-        if (profile.role === "admin") {
-          navigate("/admin/dashboard", { replace: true });
-        } else if (profile.role === "editor") {
-          navigate("/editor/dashboard", { replace: true });
-        } else {
-          navigate("/login", { replace: true });
-        }
-        return;
+      // 2. Safely get user preferences
+      let categories = [];
+      try {
+        const preferences = await getPreferences();
+        categories = preferences?.preferredCategories || [];
+      } catch (prefErr) {
+        console.warn("Could not load preferences, defaulting to empty:", prefErr);
+        categories = [];
       }
 
-      const preferences = await getPreferences();
-      const categories = preferences.preferredCategories || [];
       setSubscribedCategories(categories);
 
-      if (categories.length > 0) {
-        const results = await Promise.all(
-          categories.map((key) => fetchTopHeadlines({ category: key, pageSize: 5 }))
-        );
-        const merged = results
-          .flat()
-          .map((article, index) => ({ ...article, _category: categories[Math.floor(index / 5)] }))
-          .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-        setArticles(merged);
-      } else {
-        setArticles([]);
-      }
-    } catch (err) {
-      console.error("Error loading user dashboard:", err);
+      // 3. Fetch news for subscribed categories from backend
+    if (categories.length > 0) {
+  const results = await Promise.all(
+   categories.map((catKey) =>
+  ProtectedInstance.get(`/news/category/${catKey}`)
+    .then((res) => {
+      const list = Array.isArray(res.data) ? res.data
+        : Array.isArray(res.data?.data) ? res.data.data
+        : Array.isArray(res.data?.articles) ? res.data.articles
+        : [];
+      return list.map((a) => ({ ...a, _category: catKey })); // tag with the key, not backend's field
+    })
+    .catch((err) => {
+      console.error(`Failed to load news for category ${catKey}:`, err);
+      return [];
+    })
+)
+  );
+       const merged = results
+    .flat()
+    .filter((article) => article && (article.title || article.heading)) // Check for valid article objects
+    .map((article) => ({
+      ...article,
+      _category: article.category || "General",
+    }))
+    .sort((a, b) => new Date(b.createdAt || b.publishedAt || 0) - new Date(a.createdAt || a.publishedAt || 0));
 
-      if (err.status === 401) {
-        toast.error("Please log in to view your dashboard.");
-        navigate("/login", { replace: true });
-        return;
-      }
+  console.log("Merged articles ready for state:", merged); // 👈 Debug log to verify
+  setArticles(merged);
+} else {
+  setArticles([]);
+}
 
-      setError(err.message || "Failed to load your dashboard.");
-    } finally {
-      setLoading(false);
+  } catch (err) {
+    console.error("Error loading user dashboard:", err);
+    if (err.status === 401 || err.response?.status === 401) {
+      toast.error("Please log in to view your dashboard.");
+      navigate("/login", { replace: true });
+      return;
     }
-  };
+    setError(err.message || "Failed to load your dashboard.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+     
 
   const handleUnsubscribe = async (key) => {
     const updatedCategories = subscribedCategories.filter((item) => item !== key);
@@ -92,7 +109,7 @@ const UserDashboard = () => {
     CATEGORY_OPTIONS.find((option) => option.key === key)?.label || key;
 
   const uniqueSourceCount = new Set(
-    articles.map((article) => article.source?.name).filter(Boolean)
+    articles.map((article) => article.source?.name || "News Portal").filter(Boolean)
   ).size;
 
   if (loading) {
@@ -245,70 +262,44 @@ const UserDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {articles.map((article, index) => (
-                    <tr key={`${article.url}-${index}`} className="hover:bg-gray-50">
-                      <td className="max-w-xs px-6 py-4">
-                        <div className="truncate text-sm font-medium text-gray-900">
-                          {article.title}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <span className="inline-flex rounded-full bg-cyan-100 px-2 text-xs font-semibold leading-5 text-cyan-800">
-                          {categoryLabel(article._category)}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {article.source?.name || "Unknown"}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                        {new Date(article.publishedAt).toLocaleDateString()}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                        <a
-                          href={article.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-cyan-600 hover:text-cyan-900"
-                        >
-                          Read
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                 
+                 // ✅ Guarantees a unique key whether using MongoDB _id, url, or index
+{articles.map((article, index) => (
+  <tr key={article._id || article.url || `article-${index}`} className="hover:bg-gray-50">
+    <td className="max-w-xs px-6 py-4">
+      <div className="truncate text-sm font-medium text-gray-900">
+        {article.title || "Untitled Article"}
+      </div>
+    </td>
+    <td className="whitespace-nowrap px-6 py-4">
+      <span className="inline-flex rounded-full bg-cyan-100 px-2 text-xs font-semibold leading-5 text-cyan-800">
+        {categoryLabel(article._category)}
+      </span>
+    </td>
+    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+      {article.source?.name || article.source || "News Portal"}
+    </td>
+    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+      {new Date(article.createdAt || article.publishedAt || Date.now()).toLocaleDateString()}
+    </td>
+    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
+      <a
+        href={article.url || "#"}
+        target="_blank"
+        rel="noreferrer"
+        className="text-cyan-600 hover:text-cyan-900"
+      >
+        Read
+      </a>
+    </td>
+  </tr>
+))}
+                 
                 </tbody>
               </table>
             </div>
           )}
         </div>
-
-        {/* Recent Activity */}
-        {articles.length > 0 && (
-          <div className="mt-8 rounded-lg bg-white p-6 shadow">
-            <h2 className="mb-4 text-xl font-semibold">Recent Activity</h2>
-            <div className="space-y-4">
-              {articles.slice(0, 5).map((article, index) => (
-                <div
-                  key={`${article.url}-recent-${index}`}
-                  className="flex items-center gap-4 rounded-lg bg-gray-50 p-3"
-                >
-                  <div className="flex-shrink-0">
-                    <div className="h-3 w-3 rounded-full bg-cyan-500"></div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      New in <strong>{categoryLabel(article._category)}</strong>:{" "}
-                      {article.title}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(article.publishedAt).toLocaleDateString()} •{" "}
-                      {article.source?.name || "Unknown source"}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

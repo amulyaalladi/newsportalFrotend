@@ -86,8 +86,10 @@ export const searchNews = async (params = {}) => {
 export async function getBreakingNews({ signal } = {}) {
   try {
     const response = await instance.get("/news/breaking", { signal });
-    return response.data.result || [];
+    // Handles both { result: [...] }, { articles: [...] }, or a raw array [...]
+    return response.data.result || response.data.articles || response.data || [];
   } catch (error) {
+    console.error("Breaking news detailed error:", error.response?.data || error);
     throw new Error(extractErrorMessage(error, "Unable to fetch breaking news."));
   }
 }

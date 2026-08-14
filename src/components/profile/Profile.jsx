@@ -1,14 +1,15 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "react-toastify";
-import { Mail, Bell, Check, User as UserIcon, LayoutDashboard } from "lucide-react";
+import { Mail, Bell, Check, User as UserIcon, LayoutDashboard, Loader2 } from "lucide-react";
 import {
   getProfile,
   updateProfile,
   getPreferences,
   updatePreferences,
   getNotifications,
- 
+  markNotificationRead,
+  markAllNotificationsRead,
 } from "../../services/userServices";
 import { CATEGORY_OPTIONS } from "../common/categories";
 import NavBar from "../common/NavBar";
@@ -69,11 +70,14 @@ const Profile = () => {
         setProfile({ ...EMPTY_PROFILE, ...data });
       } catch (err) {
         console.error("Error loading profile:", err);
-        setProfileError(err.message);
+        setProfileError(err.message || "Failed to load profile.");
       } finally {
         setIsProfileLoading(false);
       }
     };
+
+    
+    
 
     const loadPreferences = async () => {
       setIsPrefsLoading(true);
@@ -83,26 +87,28 @@ const Profile = () => {
         setPreferences({ ...EMPTY_PREFERENCES, ...data });
       } catch (err) {
         console.error("Error loading preferences:", err);
-        setPrefsError(err.message);
+        setPrefsError(err.message || "Failed to load preferences.");
       } finally {
         setIsPrefsLoading(false);
       }
     };
 
-    const loadNotifications = async () => {
-      setIsNotifsLoading(true);
-      setNotifsError("");
-      try {
-        const data = await getNotifications();
-        setNotifications(data || []);
-      } catch (err) {
-        console.error("Error loading notifications:", err);
-        setNotifsError(err.message);
-      } finally {
-        setIsNotifsLoading(false);
-      }
-    };
+ const loadNotifications = async () => {
+  setIsNotifsLoading(true);
+  setNotifsError("");
 
+  try {
+    const data = await getNotifications();
+    console.log("Notifications array:", data); // Prints [] when empty
+    setNotifications(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Error loading notifications:", err);
+    setNotifsError(err.response?.data?.message || err.message || "Failed to load notifications.");
+  } finally {
+    // ⚠️ CRUCIAL: Stops loading state whether result is empty [] or filled
+    setIsNotifsLoading(false);
+  }
+};
     loadProfile();
     loadPreferences();
     loadNotifications();
@@ -165,14 +171,14 @@ const Profile = () => {
   // ---- Notifications handlers ----
   const handleMarkRead = async (id) => {
     setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, read: true } : item))
+      prev.map((item) => ((item._id || item.id) === id ? { ...item, read: true } : item))
     );
     try {
       await markNotificationRead(id);
     } catch (err) {
       console.error("Error marking notification read:", err);
       setNotifications((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, read: false } : item))
+        prev.map((item) => ((item._id || item.id) === id ? { ...item, read: false } : item))
       );
     }
   };
@@ -248,8 +254,9 @@ const Profile = () => {
               )}
 
               {isProfileLoading ? (
-                <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">
-                  Loading profile...
+                <div className="flex items-center justify-center rounded-lg bg-white p-12 text-gray-500 shadow gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-cyan-600" />
+                  <span>Loading profile...</span>
                 </div>
               ) : (
                 <div className="space-y-6 rounded-lg bg-white p-5 shadow">
@@ -328,8 +335,9 @@ const Profile = () => {
               )}
 
               {isPrefsLoading ? (
-                <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">
-                  Loading preferences...
+                <div className="flex items-center justify-center rounded-lg bg-white p-12 text-gray-500 shadow gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-cyan-600" />
+                  <span>Loading preferences...</span>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -461,56 +469,60 @@ const Profile = () => {
 
               <div className="mt-4 space-y-4">
                 {isNotifsLoading ? (
-                  <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">
-                    Loading notifications...
+                  <div className="flex items-center justify-center rounded-lg bg-white p-12 text-gray-500 shadow gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-cyan-600" />
+                    <span>Loading notifications...</span>
                   </div>
                 ) : notifications.length === 0 && !notifsError ? (
                   <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">
                     No notifications yet.
                   </div>
                 ) : (
-                  notifications.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`flex items-start gap-4 rounded-lg p-5 shadow transition ${
-                        item.read
-                          ? "border border-gray-200 bg-gray-50 text-gray-600"
-                          : "border-y border-r border-gray-200 border-l-4 border-l-cyan-600 bg-white text-gray-800"
-                      }`}
-                    >
+                  notifications.map((item) => {
+                    const notifId = item._id || item.id;
+                    return (
                       <div
-                        className={`mt-0.5 rounded-full p-2.5 ${
-                          item.read ? "bg-gray-200 text-gray-500" : "bg-cyan-100 text-cyan-600"
+                        key={notifId}
+                        className={`flex items-start gap-4 rounded-lg p-5 shadow transition ${
+                          item.read
+                            ? "border border-gray-200 bg-gray-50 text-gray-600"
+                            : "border-y border-r border-gray-200 border-l-4 border-l-cyan-600 bg-white text-gray-800"
                         }`}
                       >
-                        <Bell className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1">
-                        <p
-                          className={`text-sm ${
-                            item.read ? "font-normal" : "font-semibold text-gray-900"
+                        <div
+                          className={`mt-0.5 rounded-full p-2.5 ${
+                            item.read ? "bg-gray-200 text-gray-500" : "bg-cyan-100 text-cyan-600"
                           }`}
                         >
-                          {item.title}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">{item.message}</p>
-                        <p className="mt-2 text-xs text-gray-400">
-                          {new Date(item.createdAt).toLocaleString()}
-                        </p>
-                      </div>
+                          <Bell className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p
+                            className={`text-sm ${
+                              item.read ? "font-normal" : "font-semibold text-gray-900"
+                            }`}
+                          >
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500">{item.message}</p>
+                          <p className="mt-2 text-xs text-gray-400">
+                            {new Date(item.createdAt).toLocaleString()}
+                          </p>
+                        </div>
 
-                      {!item.read && (
-                        <button
-                          type="button"
-                          onClick={() => handleMarkRead(item.id)}
-                          className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-cyan-600"
-                          title="Mark as read"
-                        >
-                          <Check className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
-                  ))
+                        {!item.read && (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkRead(notifId)}
+                            className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-cyan-600"
+                            title="Mark as read"
+                          >
+                            <Check className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

@@ -184,9 +184,9 @@ const Home = () => {
                 >
                   <div className="h-48 overflow-hidden bg-slate-800">
                     <img
-                      src={article.urlToImage || "https://via.placeholder.com/640x360?text=News+Image"}
+                      src={article.image || article.urlToImage || "https://placehold.co/640x360/1e293b/ffffff?text=News+Image"}
                       alt={article.title}
-                      className="h-full w-full object-cover"
+                       className="h-full w-full object-cover"
                     />
                   </div>
 
@@ -201,10 +201,10 @@ const Home = () => {
                           {searchParams.category}
                         </span>
                       )}
-                      {article.source?.name && (
+                     {article.author && (
                         <span className="rounded-full bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300">
-                          {article.source.name}
-                        </span>
+                         {article.author}
+                          </span>
                       )}
                     </div>
 

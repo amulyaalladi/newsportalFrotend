@@ -1,76 +1,54 @@
-// API client for user data (profile, preferences, notifications).
-// Update VITE_API_BASE_URL in your .env to point at your backend, e.g.:
-//   VITE_API_BASE_URL=https://api.yourdomain.com
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
-
-async function request(path, options = {}) {
-  let response;
-
-  try {
-    response = await fetch(`${API_BASE}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      ...options,
-    });
-  } catch (networkError) {
-    throw new Error(
-      "Couldn't reach the backend. Check VITE_API_BASE_URL and make sure the server is running."
-    );
-  }
-
-  let data = null;
-  try {
-    data = await response.json();
-  } catch {
-    // no JSON body — fine for e.g. 204 responses
-  }
-
-  if (!response.ok) {
-    const error = new Error(data?.message || `Request failed (${response.status})`);
-    error.status = response.status;
-    throw error;
-  }
-
-  return data;
-}
+import ProtectedInstance from "../instances/ProtectedInstance";
 
 // ---- Profile -------------------------------------------------------------
+export const getProfile = async () => {
+  const response = await ProtectedInstance.get("/users/me");
+  return response.data;
+};
 
-// Expected shape from GET /profile:
-// { name: string, email: string, bio: string, avatarUrl: string, role: "user" | "editor" | "admin" }
-export const getProfile = () => request("/users/me");
-
-export const updateProfile = (profile) =>
-  request("/users/me", {
-    method: "PUT",
-    body: JSON.stringify(profile),
-  });
+export const updateProfile = async (profileData) => {
+  const response = await ProtectedInstance.put("/users/me", profileData);
+  return response.data;
+};
 
 // ---- Preferences -----------------------------------------------------------
+export const getPreferences = async () => {
+  const response = await ProtectedInstance.get("/preferences");
+  return response.data;
+};
 
-// Expected shape from GET /preferences:
-// {
-//   darkMode: boolean,
-//   preferredCategories: string[],
-//   notificationChannel: "email" | "push",
-//   notificationFrequency: "immediate" | "hourly" | "daily"
-// }
-export const getPreferences = () => request("/preferences");
-
-export const updatePreferences = (preferences) =>
-  request("/preferences/", {
-    method: "PUT",
-    body: JSON.stringify(preferences),
-  });
+export const updatePreferences = async (preferencesData) => {
+  const response = await ProtectedInstance.put("/preferences", preferencesData);
+  return response.data;
+};
 
 // ---- Notifications ---------------------------------------------------------
+// ---- Notifications ---------------------------------------------------------
+export const getNotifications = async () => {
+  try {
+    const response = await ProtectedInstance.get("/notifications");
+    
+    // Extract array from {"success": true, "result": []}
+    if (Array.isArray(response.data?.result)) {
+      return response.data.result;
+    }
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("userServices getNotifications error:", error);
+    throw error;
+  }
+};
 
-// Expected shape from GET /notifications:
-// [{ id: string, title: string, message: string, createdAt: string, read: boolean }]
-export const getNotifications = () => request("/notifications/");
+export const markNotificationRead = async (id) => {
+  const response = await ProtectedInstance.patch(`/notifications/${id}/read`);
+  return response.data;
+};
 
-
-
-export const markAllNotificationsRead = () =>
-  request("/notifications/read-all", { method: "PATCH" });
+export const markAllNotificationsRead = async () => {
+  const response = await ProtectedInstance.patch("/notifications/read-all");
+  return response.data;
+};

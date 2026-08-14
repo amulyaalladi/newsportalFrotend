@@ -5,9 +5,11 @@ import { toast } from "react-toastify";
 import { clearUser } from "../../redux/authSlice";
 import { logoutUser } from "../../services/authServices";
 import UserDashboard from "../../pages/user/userDashboard";
+import { Menu, X } from "lucide-react";
 
 const NavBar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  //const [menuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -103,14 +105,7 @@ const NavBar = () => {
               onClick={() => setMenuOpen((open) => !open)}
               className="rounded-md bg-white/5 p-2 text-slate-100 transition hover:bg-white/10"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              
             </button>
           </div>
         </div>
