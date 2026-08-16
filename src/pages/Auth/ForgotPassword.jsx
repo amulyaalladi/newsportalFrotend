@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-
+import { forgotPassword } from '../../services/authServices';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -14,16 +14,15 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your actual forgot password API call
-      // await api.post('/auth/forgot-password', { email });
-
-      // Simulate network request
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
+      // Calls the forgotPassword API service with the user's email
+      await forgotPassword(email);
       setIsSubmitted(true);
     } catch (err) {
-      setError('Failed to send password reset email. Please try again.');
-      console.error(err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to send password reset email. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

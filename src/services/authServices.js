@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
+import Instances from "../instances/Instances";
 
 async function request(path, options = {}) {
   let response;
@@ -35,6 +36,10 @@ export const loginUser = (credentials) =>
 
 export const registerUser = (data) =>
   request("/auth/register", { method: "POST", body: JSON.stringify(data) });
+export const forgotPassword = async (email) => {
+    const response = await Instances.post('/auth/forgot-password', { email });
+    return response.data;
+};
 
 
 export const getMe = () => request("/auth/me");

@@ -21,12 +21,13 @@ export const router = createBrowserRouter([
   // Public / Guest Routes
   { path: "/login", element: <Login />, loader: guestLoader },
   { path: "/register", element: <Register />, loader: guestLoader },
-  { path: "/forgot-password", element: <ForgotPassword />, loader: guestLoader },
+  { path:"/forgot-password", element:<ForgotPassword />, loader: guestLoader},
 
   // Protected / Authenticated Routes
   { path: "/home", element: <Home />, loader: authLoader },
   { path: "/dashboard", element: <UserDashboard />, loader: authLoader },
   { path: "/profile", element: <Profile />, loader: authLoader },
+  
 
   // Catch-all redirect
   {

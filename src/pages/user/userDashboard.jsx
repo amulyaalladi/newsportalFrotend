@@ -188,7 +188,7 @@ const UserDashboard = () => {
           </div>
         </div>
 
-        {/* Subscribed categories chips */}
+        
         {subscribedCategories.length > 0 && (
           <div className="mb-8 rounded-lg bg-white p-6 shadow">
             <h2 className="mb-4 text-xl font-semibold">Your Categories</h2>
@@ -213,7 +213,7 @@ const UserDashboard = () => {
           </div>
         )}
 
-        {/* Subscribed News Section */}
+      
         <div className="rounded-lg bg-white shadow">
           <div className="border-b p-6">
             <h2 className="text-xl font-semibold">Your Subscribed News</h2>
@@ -263,7 +263,7 @@ const UserDashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                  
-                 // ✅ Guarantees a unique key whether using MongoDB _id, url, or index
+                 
 {articles.map((article, index) => (
   <tr key={article._id || article.url || `article-${index}`} className="hover:bg-gray-50">
     <td className="max-w-xs px-6 py-4">

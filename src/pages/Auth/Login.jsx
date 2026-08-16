@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router";
-import Instance from "../../instances/Instances";
+import Instances from "../../instances/Instances";
 import { setUser } from '../../redux/authSlice';
 import { toast } from "react-toastify";
 import Register from "./Register";
@@ -104,7 +104,7 @@ const Login = () => {
                                 type="email"
                                 required
                                 className="w-full px-3 py-2 border-2 border-black focus:outline-none focus:bg-amber-50/30 text-sm rounded-none"
-                                placeholder="editor@dailypulse.com"
+                                placeholder="example@gmail.com"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             />
@@ -115,9 +115,9 @@ const Login = () => {
                                 <label htmlFor="password" className="block text-[11px] font-bold uppercase tracking-wider text-gray-800">
                                     Password
                                 </label>
-                                <Link to="" className="text-xs text-gray-500 hover:text-black underline">
-                                    Forgot?
-                                </Link>
+                                <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-black underline">
+    Forgot?
+</Link>
                             </div>
                             <input
                                 id="password"
