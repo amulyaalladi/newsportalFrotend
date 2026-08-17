@@ -7,7 +7,6 @@ import {
   Check,
   User as UserIcon,
   Loader2,
-  Lock,
   Eye,
   EyeOff,
   ArrowLeft,
@@ -15,9 +14,9 @@ import {
   Sliders,
   Sparkles,
   ExternalLink,
-  ShieldCheck,
   X,
-  Tag
+  Tag,
+  Plus
 } from "lucide-react";
 import {
   getProfile,
@@ -313,6 +312,24 @@ const Profile = () => {
     }
   };
 
+  const handleSubscribe = async (key) => {
+    const updatedCategories = [...subscribedCategories, key];
+    const previous = subscribedCategories;
+    setSubscribedCategories(updatedCategories);
+    setPreferences((prev) => ({ ...prev, preferredCategories: updatedCategories }));
+
+    try {
+      await updatePreferences({ preferredCategories: updatedCategories });
+      toast.success("Subscribed!");
+      await loadDashboardArticles(updatedCategories);
+    } catch (err) {
+      console.error("Error subscribing:", err);
+      toast.error(err.message || "Couldn't update preferences.");
+      setSubscribedCategories(previous);
+      setPreferences((prev) => ({ ...prev, preferredCategories: previous }));
+    }
+  };
+
   const handleMarkRead = async (id) => {
     setNotifications((prev) =>
       prev.map((item) => ((item._id || item.id) === id ? { ...item, read: true } : item))
@@ -339,6 +356,9 @@ const Profile = () => {
   };
 
   const unreadCount = notifications.filter((item) => !item.read).length;
+  const unsubscribedCategories = CATEGORY_OPTIONS.filter(
+    (option) => !subscribedCategories.includes(option.key)
+  );
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100">
@@ -367,7 +387,6 @@ const Profile = () => {
                   <h1 className="text-2xl font-black tracking-tight text-white">
                     {profile.name || "User Account"}
                   </h1>
-                  
                 </div>
                 <p className="mt-1 text-sm text-stone-400">{profile.email || "Manage your preferences & feed"}</p>
               </div>
@@ -431,7 +450,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Category Badges */}
+                {/* Subscribed Category Badges */}
                 {subscribedCategories.length > 0 && (
                   <div className="rounded-2xl border border-stone-800 bg-stone-900/60 p-5 backdrop-blur-md">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">Active Subscriptions</p>
@@ -456,13 +475,33 @@ const Profile = () => {
                   </div>
                 )}
 
+                {/* Unsubscribed Categories */}
+                {unsubscribedCategories.length > 0 && (
+                  <div className="rounded-2xl border border-stone-800/80 bg-stone-900/40 p-5 backdrop-blur-md">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-500">Explore & Subscribe</p>
+                    <div className="flex flex-wrap gap-2">
+                      {unsubscribedCategories.map((option) => (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => handleSubscribe(option.key)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-800 bg-stone-950 px-3 py-1.5 text-xs font-medium text-stone-400 transition hover:border-stone-700 hover:text-stone-200"
+                        >
+                          <Plus className="h-3 w-3 text-stone-500" />
+                          <span>{option.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Articles Table / Cards */}
                 <div className="overflow-hidden rounded-2xl border border-stone-800 bg-stone-900/60 shadow-xl backdrop-blur-md">
                   {subscribedCategories.length === 0 ? (
                     <div className="py-16 text-center">
                       <Sparkles className="mx-auto mb-3 h-10 w-10 text-stone-600" />
                       <h3 className="text-lg font-bold text-white">No Category Subscriptions</h3>
-                      <p className="mt-1 text-sm text-stone-400">Subscribe to topics to unlock your news stream.</p>
+                      <p className="mt-1 text-sm text-stone-400">Subscribe to topics above or choose from preferences to unlock your news stream.</p>
                       <button
                         onClick={() => setActiveTab("preferences")}
                         className="mt-5 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700"
