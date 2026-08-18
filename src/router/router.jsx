@@ -22,7 +22,10 @@ export const router = createBrowserRouter([
   // Public / Guest Routes
   { path: "/login", element: <Login />, loader: guestLoader },
   { path: "/register", element: <Register />, loader: guestLoader },
-  { path:"/forgot-password", element:<ForgotPassword />, loader: guestLoader},
+  {path:"/forgot-password", element:<ForgotPassword />},
+      
+     
+  {path:"/reset-password/:token", element:<ResetPassword />},
 
   // Protected / Authenticated Routes
   { path: "/home", element: <Home />, loader: authLoader },

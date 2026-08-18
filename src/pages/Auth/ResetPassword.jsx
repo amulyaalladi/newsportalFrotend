@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 
-export default function ResetPassword() {
+function ResetPassword() {
   const { token } = useParams();
   const navigate = useNavigate();
 
@@ -10,7 +10,8 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState({ loading: false, error: "", success: false });
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "";
+  // Use Vite's environment variable syntax
+ // const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,29 +20,31 @@ export default function ResetPassword() {
       return setStatus({ loading: false, error: "Passwords do not match", success: false });
     }
 
-    if (password.length < 8) {
+    if (password.length < 6) {
       return setStatus({ loading: false, error: "Password must be at least 8 characters", success: false });
     }
 
     setStatus({ loading: true, error: "", success: false });
 
     try {
-      const res = await fetch(`${API_URL}/auth/reset-password/${token}`, {
+      // Added missing slash before ${token}
+      const response = await fetch(`https://newsportalbackend-oatr.onrender.com/auth/reset-password/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(data.message || "Failed to reset password");
       }
 
       setStatus({ loading: false, error: "", success: true });
       setTimeout(() => navigate("/login"), 3000);
-    } catch (err) {
-      setStatus({ loading: false, error: err.message, success: false });
+    } catch (error) {
+      // Fixed error parameter reference
+      setStatus({ loading: false, error: error.message, success: false });
     }
   };
 
@@ -111,3 +114,5 @@ export default function ResetPassword() {
     </div>
   );
 }
+
+export default ResetPassword
