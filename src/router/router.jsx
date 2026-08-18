@@ -3,7 +3,7 @@ import { createBrowserRouter, redirect } from "react-router";
 
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
-import ForgotPassword from "../pages/Auth/ForgotPassword";
+import ResetPassword from "../pages/Auth/ResetPassword";
 
 import Home from "../pages/Home/Home";
 import UserDashboard from "../pages/user/userDashboard";
@@ -11,6 +11,7 @@ import Profile from "../components/profile/Profile";
 
 import guestLoader from "../loaders/guestLoader";
 import authLoader from "../loaders/authLoader";
+import ForgotPassword from "../pages/Auth/ForgotPassword";
 
 export const router = createBrowserRouter([
   {
