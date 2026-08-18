@@ -28,7 +28,7 @@ function ResetPassword() {
 
     try {
       // Added missing slash before ${token}
-      const response = await fetch(`https://newsportalbackend-oatr.onrender.com/auth/reset-password/${token}`, {
+      const response = await fetch(`https://newsportalbackend-oatr.onrender.com/api/v1/auth/reset-password/${token}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
