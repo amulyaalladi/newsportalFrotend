@@ -50,25 +50,3 @@ export const adminLoader=async()=>{
     }
 }
 
-export const editorLoader=async()=>{
-    try {
-        const response=await getMe();
-        const user=response.user;
-
-        store.dispatch(setUser(user));
-
-        if(user.role !=='editor'){
-            if(user.role==='user'){
-                return redirect('/dashboard');
-            }else if(user.role==='admin'){
-                return redirect('/admin/dashboard');
-            }
-            return redirect('/login');
-        }
-        return response;
-    } catch (error) {
-        console.error('User loader error:',error);
-        store.dispatch(clearUser());
-        return redirect('/login');
-    }
-}
